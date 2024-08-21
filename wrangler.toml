@@ -1,0 +1,9 @@
+name = "replies"
+main = "src/worker.js"
+compatibility_date = "2000-01-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "db"
+database_id = "610b96f5-6e84-4e23-a374-3daada5262c3"
+database_name = "replies"
