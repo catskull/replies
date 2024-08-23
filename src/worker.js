@@ -1,56 +1,105 @@
+import PostalMime from 'postal-mime'
+
 export default {
-    async digestMessage(message) {
-      // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
-      const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8); // hash the message
-      const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-      const hashHex = hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join(""); // convert bytes to hex string
-      return hashHex;
+    addCORSHeaders(response){
+          const corsHeaders = {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, HEAD, OPTIONS',
+              'Access-Control-Max-Age': '86400',
+              'Access-Control-Allow-Headers' : 'x-worker-key,Content-Type,x-custom-metadata,Content-MD5,x-amz-meta-fileid,x-amz-meta-account_id,x-amz-meta-clientid,x-amz-meta-file_id,x-amz-meta-opportunity_id,x-amz-meta-client_id,x-amz-meta-webhook',
+              'Access-Control-Allow-Credentials' : 'true',
+              'Allow': 'GET, POST, PUT, DELETE, HEAD, OPTIONS'
+          }
+        const newResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: corsHeaders,
+        })
+        return newResponse
     },
 
-  async processReply(env, message) {
+    async digestMessage(message) {
+      // https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+      const msgUint8 = new TextEncoder().encode(message) // encode as (utf-8) Uint8Array
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8) // hash the message
+      const hashArray = Array.from(new Uint8Array(hashBuffer)) // convert buffer to byte array
+      const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("") // convert bytes to hex string
+      return hashHex
+    },
+
+  async processReply(env, email) {
+    console.log(email.from)
+    console.log(email.messageId)
+    console.log(email.date)
+    console.log(email.subject)
+
+    const url = new URL(email?.subject?.match(/\bhttps?:\/\/\S+/gi)?.[0])
+
+    if (!url) {
+      return {error: 'Unable to find valid URL in email subject'}
+    }
+
     const guid = crypto.randomUUID()
-    const email = message.from.trim().toLowerCase();
-    const gravitar_hash = await this.digestMessage(email);
+    const gravitar_hash = await this.digestMessage(email.from.address.trim().toLowerCase())
 
-    const url = new URL(message.subject.split(' ')[1]);
-    const host = `${url.origin}${url.pathname}`;
-    const subscribe = url.searchParams.get('subscribe') ?? 0;
-    const parent = url.hash.substring(1);
-
-    console.log(`Host: ${host}`);
-    console.log(`subscribe: ${subscribe}`);
-    console.log(`Anchor: ${anchor}`);
+    const host = `${url.host}${url.pathname}` // catskull.net/path/to/document
+    const subscribe = url.searchParams.get('subscribe') ?? 0
+    const parent = url.hash.substring(1)
 
     const query = `
-      INSERT INTO Replies (guid, url, message, email, created_at, updated_at, gravitar_hash, subscribe, parent)
-      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?)
-    `;
+      INSERT INTO Replies (guid, url, message, email, created_at, updated_at, gravitar_hash, subscribe, parent, name)
+      VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?,?)
+    `
 
-    await env.db.prepare(query).bind(guid, host, message.message, email, gravitar_hash, subscribe, parent).run();
+    await env.db.prepare(query).bind(
+      guid,
+      host,
+      email.text,
+      email.from.address,
+      gravitar_hash,
+      subscribe,
+      parent,
+      email.from.name
+    ).run()
 
-    const { results } = await env.db.prepare("SELECT * FROM Replies WHERE guid = ?").bind(guid).all();
-    return results;
+    const { results } = await env.db.prepare("SELECT * FROM Replies WHERE guid = ?").bind(guid).all()
+    return results
   },
 
   async email(message, env, ctx) {
-    debugger;
-    await this.processReply(env, message);
+    const email = await PostalMime.parse(message.raw)
+
+    const result = await this.processReply(env, email)
+
+    console.log(result)
   },
 
   async fetch(request, env) {
-    const message = {
-      from: 'dave@prizem.group',
-      to: 'reply@catskull.net',
-      subject: 're: https://test.com/test',
-      message: 'I thought this was a very well-written article.',
-    };
+      if (request.headers.get('Accept').includes('html')) {
+        return new Response('nope')
+      }
+      const url = request.url
 
-    const results = await this.processReply(env, message);
-    return new Response(JSON.stringify(results), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+      const { results } = await env.db.prepare("SELECT * FROM Replies WHERE url = ? AND deleted_at IS NULL").bind(url).all()
+
+      function buildNestedReplies(replies, parentId = null) {
+          return replies
+              .filter(reply => reply.parent === parentId)
+              .map(reply => {
+                  const { guid, parent, url, subscribe, updated_at, deleted_at, ...rest } = reply
+                  return {
+                      ...rest,
+                      children: buildNestedReplies(replies, reply.guid)
+                  }
+              })
+      }
+
+      const nestedReplies = buildNestedReplies(results)
+
+      return this.addCORSHeaders(new Response(JSON.stringify(nestedReplies), {
+          headers: { 'Content-Type': 'application/json' }
+      }))
   }
 }
