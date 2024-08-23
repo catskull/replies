@@ -1,6 +1,6 @@
 class Replies extends HTMLElement {
 	async connectedCallback() {
-		const response = await fetch('http://localhost:8787')
+		const response = await fetch(`https://replies.catskull.net?host=${location.host}${location.pathname}`)
 		const data = await response.json()
 		console.log(data)
 

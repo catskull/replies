@@ -1,4 +1,7 @@
 import PostalMime from 'postal-mime'
+import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
+import manifestJSON from "__STATIC_CONTENT_MANIFEST";
+const assetManifest = JSON.parse(manifestJSON);
 
 export default {
     addCORSHeaders(response){
@@ -76,27 +79,56 @@ export default {
     console.log(result)
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
       if (request.headers.get('Accept').includes('html')) {
         return new Response('nope')
       }
-      const url = request.url
 
-      const { results } = await env.db.prepare("SELECT * FROM Replies WHERE url = ? AND deleted_at IS NULL").bind(url).all()
+      if(request.url.includes('replies.js')) {
+        try {
+          return await getAssetFromKV(
+            {
+              request,
+              waitUntil: ctx.waitUntil.bind(ctx),
+            },
+            {
+              ASSET_NAMESPACE: env.__STATIC_CONTENT,
+              ASSET_MANIFEST: assetManifest,
+            },
+          );
+        } catch (e) {
+          let pathname = new URL(request.url).pathname;
+          return new Response(`"${pathname}" not found`, {
+            status: 404,
+            statusText: "not found",
+          });
+        }
+      }
 
-      function buildNestedReplies(replies, parentId = null) {
+      const url = new URL(request.url);
+      const params = new URLSearchParams(url.search);
+      const host = params.get('host');
+      console.log(host)
+
+      const { results } = await env.db.prepare("SELECT * FROM Replies WHERE url = ? AND deleted_at IS NULL").bind(host).all()
+
+      console.log(results)
+
+      function buildNestedReplies(replies, parentId = '') {
           return replies
               .filter(reply => reply.parent === parentId)
               .map(reply => {
-                  const { guid, parent, url, subscribe, updated_at, deleted_at, ...rest } = reply
+                  const { guid, parent, url, subscribe, updated_at, deleted_at, ...rest } = reply;
                   return {
                       ...rest,
                       children: buildNestedReplies(replies, reply.guid)
-                  }
-              })
+                  };
+              });
       }
 
       const nestedReplies = buildNestedReplies(results)
+
+      console.log(nestedReplies)
 
       return this.addCORSHeaders(new Response(JSON.stringify(nestedReplies), {
           headers: { 'Content-Type': 'application/json' }
