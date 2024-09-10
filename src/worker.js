@@ -1,7 +1,4 @@
 import PostalMime from 'postal-mime'
-import { getAssetFromKV } from "@cloudflare/kv-asset-handler";
-import manifestJSON from "__STATIC_CONTENT_MANIFEST";
-const assetManifest = JSON.parse(manifestJSON);
 
 export default {
     addCORSHeaders(response){
@@ -80,29 +77,10 @@ export default {
   },
 
   async fetch(request, env, ctx) {
+    console.log(request.headers.origin)
+
       if (request.headers.get('Accept').includes('html')) {
         return new Response('nope')
-      }
-
-      if(request.url.includes('replies.js')) {
-        try {
-          return await getAssetFromKV(
-            {
-              request,
-              waitUntil: ctx.waitUntil.bind(ctx),
-            },
-            {
-              ASSET_NAMESPACE: env.__STATIC_CONTENT,
-              ASSET_MANIFEST: assetManifest,
-            },
-          );
-        } catch (e) {
-          let pathname = new URL(request.url).pathname;
-          return new Response(`"${pathname}" not found`, {
-            status: 404,
-            statusText: "not found",
-          });
-        }
       }
 
       const url = new URL(request.url);

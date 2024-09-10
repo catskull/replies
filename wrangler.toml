@@ -7,6 +7,3 @@ workers_dev = true
 binding = "db"
 database_id = "610b96f5-6e84-4e23-a374-3daada5262c3"
 database_name = "replies"
-
-[site]
-bucket = "./public"
