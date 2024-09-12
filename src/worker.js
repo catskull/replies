@@ -30,11 +30,6 @@ export default {
       },
 
       async processReply(env, email) {
-        console.log(email.from)
-        console.log(email.messageId)
-        console.log(email.date)
-        console.log(email.subject)
-
         const url = new URL(email?.subject?.match(/\bhttps?:\/\/\S+/gi)?.[0])
 
         if (!url) {
@@ -72,29 +67,20 @@ export default {
     const email = await PostalMime.parse(message.raw)
 
     const result = await this.processReply(env, email)
-
-    console.log(result)
   },
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const params = new URLSearchParams(url.search);
     const host = params.get('host');
-    console.log('host:')
-    console.log(host)
-
-    console.log(request.method)
     if (request.method === 'PUT') {
       const commentId = url.toString().split('/').pop()
-      console.log(commentId)
       const result = await env.db.prepare(`
         UPDATE Replies
         SET likes = likes + 1
         WHERE guid = ?
         RETURNING likes;
       `).bind(commentId).first();
-
-      console.log(result)
 
       if (!result) {
         return new Response('Reply not found', { status: 404 });
@@ -110,11 +96,12 @@ export default {
       return replies
       .filter(reply => reply.parent === parentId)
       .map(reply => {
-        const { parent, url, subscribe, updated_at, deleted_at, ...rest } = reply;
+        const { parent, url, subscribe, updated_at, deleted_at, name, email, ...rest } = reply;
         return {
           ...rest,
           children: buildNestedReplies(replies, reply.guid),
-          created_at: reply.created_at + 'Z'
+          created_at: reply.created_at + 'Z',
+          name: reply.name || reply.email
         };
       });
     }

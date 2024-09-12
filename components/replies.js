@@ -24,10 +24,10 @@ class Replies extends HTMLElement {
 		  li.innerHTML = `
 		    <details open class="comment">
 		      <summary>
-		        <strong title="${reply.email}">${reply.name || reply.email}</strong>
+		        <strong >${reply.name}</strong>
 		      </summary>
 		      <div class="comment-details">
-		        <img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}" alt="${reply.name || reply.email}'s Profile Picture" width="50" height="50">
+		        <img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}" alt="${reply.name}'s Profile Picture" width="50" height="50">
 		        <div class="comment-content">
 		          <p>${reply.message}</p>
 		          <small>
