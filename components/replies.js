@@ -72,6 +72,9 @@ class Replies extends HTMLElement {
 		    page-replies {
 		      summary {
 		        cursor: pointer;
+		        strong {
+		        	font-weight: bolder;
+		        }
 		      }
 		      ul {
 		        list-style-type: none;
