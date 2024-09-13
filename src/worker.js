@@ -52,11 +52,11 @@ export default {
       guid,
       host,
       email.text,
-      email.from.address,
+      null,
       gravitar_hash,
       subscribe,
       parent,
-      email.from.name
+      email.from.name || email.from.address.split('@')[0]
       ).run()
 
     const { results } = await env.db.prepare("SELECT * FROM Replies WHERE guid = ?").bind(guid).all()
