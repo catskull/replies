@@ -1,4 +1,8 @@
 import PostalMime from 'postal-mime'
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
+
+
 
 export default {
   addCORSHeaders(response){
@@ -16,6 +20,12 @@ export default {
       headers: corsHeaders,
     })
     return newResponse
+  },
+
+  sanitizeText(str) {
+    const window = new JSDOM('').window;
+    const purify = DOMPurify(window);
+    return purify.sanitize(str);
   },
 
   async digestMessage(message) {
@@ -48,10 +58,12 @@ export default {
     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?,?)
     `
 
+    const emailText = this.sanitizeText(email.text);
+
     await env.db.prepare(query).bind(
       guid,
       host,
-      email.text,
+      emailText,
       null,
       gravitar_hash,
       subscribe,
