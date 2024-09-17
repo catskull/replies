@@ -1,19 +1,20 @@
 {
-  "name": "replies",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.1",
-    "@cloudflare/kv-asset-handler": "^0.3.4",
-    "wrangler": "^3.76.0"
-  },
-  "dependencies": {
-    "postal-mime": "^2.2.7",
-    "uuid": "^10.0.0"
-  }
+	"name": "replies",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"format": "biome format --write"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.1",
+		"@cloudflare/kv-asset-handler": "^0.3.4",
+		"wrangler": "^3.76.0"
+	},
+	"dependencies": {
+		"postal-mime": "^2.2.7",
+		"uuid": "^10.0.0"
+	}
 }
