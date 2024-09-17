@@ -1,21 +1,25 @@
 {
-  "name": "replies",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev"
-  },
-  "devDependencies": {
-    "@cloudflare/kv-asset-handler": "^0.3.4",
-    "wrangler": "^3.76.0"
-  },
-  "dependencies": {
-    "dompurify": "^3.1.6",
-    "jsdom": "^25.0.0",
-    "postal-mime": "^2.2.7",
-    "uuid": "^10.0.0",
-    "xss": "^1.0.15"
-  }
+	"name": "replies",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"format": "biome format --write",
+		"lint": "biome lint --write",
+		"check": "biome check --write",
+		"postinstall": "lefthook install",
+		"cf-init-local-db": "wrangler d1 execute db --local --file=./schema.sql"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.1",
+		"@cloudflare/kv-asset-handler": "^0.3.4",
+		"lefthook": "^1.7.15",
+		"wrangler": "^3.76.0"
+	},
+	"dependencies": {
+		"postal-mime": "^2.2.7",
+		"xss": "^1.0.15"
+	}
 }
