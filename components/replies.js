@@ -7,14 +7,14 @@ class Replies extends HTMLElement {
 
 		const incrementLikes = async (element, guid) => {
 			let [number, string] = element.innerHTML.split(' ')
-			const plusOne = parseInt(number) + 1
+			const plusOne = Number.parseInt(number) + 1
 			string += plusOne === 2 ? 's' : ''
 			element.innerHTML = [plusOne, string].join(' ')
 
-			const req = await fetch('https://replies.catskull.net/like/' + guid, { method: 'PUT' })
+			const req = await fetch(`https://replies.catskull.net/like/${guid}`, { method: 'PUT' })
 			const { likes } = await req.json()
 
-			if (parseInt(likes) !== plusOne) {
+			if (Number.parseInt(likes) !== plusOne) {
 				element.innerHTML = [likes, string].join(' ')
 			}
 		}
@@ -33,7 +33,7 @@ class Replies extends HTMLElement {
 		          <small>
 			          <a title="Reply with an email!" href="mailto:${mailto}#${reply.guid}">Reply</a>
 			          -
-			          <span><a href="#" title="Click to like!">${reply.likes} Like${reply.likes == 1 ? '' : 's'}</a></span>
+			          <span><a href="#" title="Click to like!">${reply.likes} Like${reply.likes === 1 ? '' : 's'}</a></span>
 			          -
 			          <span>${new Date(reply.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
 		        	</small>

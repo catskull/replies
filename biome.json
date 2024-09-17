@@ -1,6 +1,6 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.1/schema.json",
-	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true, "defaultBranch": "master" },
 	"files": { "ignoreUnknown": false, "ignore": [] },
 	"formatter": {
 		"enabled": true,
@@ -14,7 +14,15 @@
 		"bracketSpacing": true
 	},
 	"organizeImports": { "enabled": true },
-	"linter": { "enabled": true, "rules": { "recommended": true } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noForEach": "off"
+			}
+		}
+	},
 	"javascript": {
 		"formatter": {
 			"jsxQuoteStyle": "double",
