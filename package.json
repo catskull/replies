@@ -19,7 +19,6 @@
 	},
 	"dependencies": {
 		"postal-mime": "^2.2.7",
-		"uuid": "^10.0.0",
 		"xss": "^1.0.15"
 	}
 }
