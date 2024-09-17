@@ -106,7 +106,7 @@ export default {
 					return {
 						...rest,
 						children: buildNestedReplies(replies, reply.guid),
-						created_at: reply.created_at + 'Z',
+						created_at: `${reply.created_at}Z`,
 						name: reply.name || reply.email,
 					};
 				});

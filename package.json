@@ -6,7 +6,9 @@
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"format": "biome format --write"
+		"format": "biome format --write",
+		"lint": "biome lint --write",
+		"check": "biome check --write"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.1",
