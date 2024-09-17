@@ -1,26 +1,26 @@
 class Replies extends HTMLElement {
 	async connectedCallback() {
-		const response = await fetch(`https://replies.catskull.net?host=${location.host}${location.pathname}`);
-		const data = await response.json();
+		const response = await fetch(`https://replies.catskull.net?host=${location.host}${location.pathname}`)
+		const data = await response.json()
 
-		const mailto = `reply@replies.catskull.net?subject=re:%20${location.href}`;
+		const mailto = `reply@replies.catskull.net?subject=re:%20${location.href}`
 
 		const incrementLikes = async (element, guid) => {
-			let [number, string] = element.innerHTML.split(' ');
-			const plusOne = Number.parseInt(number) + 1;
-			string += plusOne === 2 ? 's' : '';
-			element.innerHTML = [plusOne, string].join(' ');
+			let [number, string] = element.innerHTML.split(' ')
+			const plusOne = Number.parseInt(number) + 1
+			string += plusOne === 2 ? 's' : ''
+			element.innerHTML = [plusOne, string].join(' ')
 
-			const req = await fetch(`https://replies.catskull.net/like/${guid}`, { method: 'PUT' });
-			const { likes } = await req.json();
+			const req = await fetch(`https://replies.catskull.net/like/${guid}`, { method: 'PUT' })
+			const { likes } = await req.json()
 
 			if (Number.parseInt(likes) !== plusOne) {
-				element.innerHTML = [likes, string].join(' ');
+				element.innerHTML = [likes, string].join(' ')
 			}
-		};
+		}
 
 		const renderReply = (reply) => {
-			const li = document.createElement('li');
+			const li = document.createElement('li')
 			li.innerHTML = `
 		    <details open class="comment">
 		      <summary>
@@ -40,32 +40,32 @@ class Replies extends HTMLElement {
 		        </div>
 		      </div>
 		    </details>
-		  `;
+		  `
 
-			const likeLink = li.querySelector('span a');
+			const likeLink = li.querySelector('span a')
 			likeLink.addEventListener('click', (event) => {
-				event.preventDefault();
-				incrementLikes(likeLink, reply.guid);
-			});
+				event.preventDefault()
+				incrementLikes(likeLink, reply.guid)
+			})
 
 			if (reply.children && reply.children.length > 0) {
-				const detailsElement = li.querySelector('details');
-				const ul = document.createElement('ul');
-				reply.children.forEach((childReply) => ul.appendChild(renderReply(childReply)));
-				detailsElement.appendChild(ul);
+				const detailsElement = li.querySelector('details')
+				const ul = document.createElement('ul')
+				reply.children.forEach((childReply) => ul.appendChild(renderReply(childReply)))
+				detailsElement.appendChild(ul)
 			}
 
-			return li;
-		};
+			return li
+		}
 
-		const details = document.createElement('details');
-		details.open = this.hasAttribute('open');
+		const details = document.createElement('details')
+		details.open = this.hasAttribute('open')
 
-		const container = document.createElement('div');
-		container.id = 'page-replies';
+		const container = document.createElement('div')
+		container.id = 'page-replies'
 
-		const ul = document.createElement('ul');
-		data.replies.forEach((reply) => ul.appendChild(renderReply(reply)));
+		const ul = document.createElement('ul')
+		data.replies.forEach((reply) => ul.appendChild(renderReply(reply)))
 
 		container.innerHTML = `
 		  <style>
@@ -112,22 +112,22 @@ class Replies extends HTMLElement {
 		      }
 		    }
 		  </style>
-		`;
+		`
 
-		container.appendChild(ul);
+		container.appendChild(ul)
 
 		details.innerHTML = `
 		  <summary>${data.total} Replies</summary>
-		`;
-		details.appendChild(container);
+		`
+		details.appendChild(container)
 
-		const replyLink = document.createElement('a');
-		replyLink.href = `mailto:${mailto}`;
-		replyLink.textContent = 'Reply';
+		const replyLink = document.createElement('a')
+		replyLink.href = `mailto:${mailto}`
+		replyLink.textContent = 'Reply'
 
-		this.appendChild(replyLink);
-		this.appendChild(details);
+		this.appendChild(replyLink)
+		this.appendChild(details)
 	}
 }
 
-customElements.define('page-replies', Replies);
+customElements.define('page-replies', Replies)
