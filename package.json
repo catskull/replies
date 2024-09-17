@@ -9,7 +9,8 @@
 		"format": "biome format --write",
 		"lint": "biome lint --write",
 		"check": "biome check --write",
-		"postinstall": "lefthook install"
+		"postinstall": "lefthook install",
+		"cf-init-local-db": "wrangler d1 execute db --local --file=./schema.sql"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.1",
