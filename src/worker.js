@@ -1,8 +1,5 @@
 import PostalMime from 'postal-mime'
-import { JSDOM } from 'jsdom';
-import DOMPurify from 'dompurify';
-
-
+import xss from 'xss';
 
 export default {
   addCORSHeaders(response){
@@ -20,12 +17,6 @@ export default {
       headers: corsHeaders,
     })
     return newResponse
-  },
-
-  sanitizeText(str) {
-    const window = new JSDOM('').window;
-    const purify = DOMPurify(window);
-    return purify.sanitize(str);
   },
 
   async digestMessage(message) {
@@ -58,7 +49,12 @@ export default {
     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?,?)
     `
 
-    const emailText = this.sanitizeText(email.text);
+    const emailText = xss(email.text, {
+      whiteList: {}, // empty, means filter out all tags
+      stripIgnoreTag: true, // filter out all HTML not in the whitelist
+      stripIgnoreTagBody: ["script"], // the script tag is a special case, we need
+      // to filter out its content
+    })
 
     await env.db.prepare(query).bind(
       guid,
