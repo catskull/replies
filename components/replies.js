@@ -27,7 +27,7 @@ class Replies extends HTMLElement {
 		        <strong >${reply.name}</strong>
 		      </summary>
 		      <div class="comment-details">
-		        <img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}" alt="${reply.name}'s Profile Picture" width="50" height="50">
+<img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}${this.hasAttribute('default') && ('?d=' + encodeURIComponent(this.getAttribute('default')))}" alt="${reply.name}'s Profile Picture" width="50" height="50">
 		        <div class="comment-content">
 		          <p>${reply.message}</p>
 		          <small>
