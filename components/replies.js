@@ -82,7 +82,6 @@ class Replies extends HTMLElement {
 		        li {
 		          border-left: 1px solid;
 		          .comment {
-		            display: flex;
 		            align-items: center;
 		            padding-left: 1ch;
 		            .comment-details {
