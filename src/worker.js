@@ -73,7 +73,9 @@ export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url)
 		const params = new URLSearchParams(url.search)
-		const host = params.get('host')
+		const all = params.get('all') ?? false
+		const host = all ? params.get('host').split('/')[0] : params.get('host')
+
 		if (request.method === 'PUT') {
 			const commentId = url.toString().split('/').pop()
 			const result = await env.db
@@ -96,7 +98,14 @@ export default {
 			)
 		}
 
-		const { results } = await env.db.prepare('SELECT * FROM Replies WHERE url = ? AND deleted_at IS NULL').bind(host).all()
+		const statement = all
+			? 'SELECT * FROM Replies WHERE url LIKE ? AND deleted_at IS NULL'
+			: 'SELECT * FROM Replies WHERE url = ? AND deleted_at IS NULL'
+
+		const { results } = await env.db
+			.prepare(statement)
+			.bind(`${host}${all ? '%' : ''}`)
+			.all()
 
 		function buildNestedReplies(replies, parentId = '') {
 			return replies
@@ -108,11 +117,26 @@ export default {
 						children: buildNestedReplies(replies, reply.guid),
 						created_at: `${reply.created_at}Z`,
 						name: reply.name || reply.email,
+						url: reply.url,
 					}
 				})
 		}
 
-		const nestedReplies = buildNestedReplies(results)
+		let nestedReplies = buildNestedReplies(results)
+
+		if (all) {
+			nestedReplies = Map.groupBy(nestedReplies, (r) => r.url)
+			nestedReplies = Array.from(nestedReplies.entries())
+				.map(([url, comments]) => {
+					return {
+						url: url,
+						name: `/${url.split('/').slice(1).join('/')}`,
+						message: `${comments.length} Replies on /${url.split('/')[1]}`,
+						children: comments,
+					}
+				})
+				.reverse()
+		}
 
 		return this.addCORSHeaders(
 			new Response(

@@ -1,8 +1,8 @@
 class Replies extends HTMLElement {
 	async connectedCallback() {
-		const response = await fetch(`https://replies.catskull.net?host=${location.host}${location.pathname}`)
+		const all = this.hasAttribute('all')
+		const response = await fetch(`https://replies.catskull.net?host=${location.host}${location.pathname}${all ? '&all=true' : ''}`)
 		const data = await response.json()
-
 		const mailto = `reply@replies.catskull.net?subject=re:%20${location.href}`
 
 		const incrementLikes = async (element, guid) => {
@@ -13,7 +13,7 @@ class Replies extends HTMLElement {
 
 			const req = await fetch(`https://replies.catskull.net/like/${guid}`, { method: 'PUT' })
 			const { likes } = await req.json()
-
+			all
 			if (Number.parseInt(likes) !== plusOne) {
 				element.innerHTML = [likes, string].join(' ')
 			}
@@ -21,17 +21,20 @@ class Replies extends HTMLElement {
 
 		const renderReply = (reply) => {
 			const li = document.createElement('li')
-			li.innerHTML = `
+			const template = `
 		    <details open class="comment">
 		      <summary>
 		        <strong >${reply.name}</strong>
 		      </summary>
-		      <div class="comment-details">
-<img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}${this.hasAttribute('default') && ('?d=' + encodeURIComponent(this.getAttribute('default')))}" alt="${reply.name}'s Profile Picture" width="50" height="50">
+				${
+					reply.guid
+						? `
+					<div class="comment-details">
+						<img class="profile-picture" src="https://gravatar.com/avatar/${reply.gravitar_hash}${this.hasAttribute('default') && `?d=${encodeURIComponent(this.getAttribute('default'))}`}" alt="${reply.name}'s Profile Picture" width="50" height="50">
 		        <div class="comment-content">
 		          <p>${reply.message}</p>
 		          <small>
-			          <a title="Reply with an email!" href="mailto:${mailto}#${reply.guid}">Reply</a>
+			          <a title="Reply with an email!" href="mailto:${`reply@replies.catskull.net?subject=re:%20${reply.url}`}#${reply.guid}">Reply</a>
 			          -
 			          <span><a href="#" title="Click to like!">${reply.likes} Like${reply.likes === 1 ? '' : 's'}</a></span>
 			          -
@@ -39,14 +42,23 @@ class Replies extends HTMLElement {
 		        	</small>
 		        </div>
 		      </div>
-		    </details>
-		  `
+			   </details>
+					`
+						: `
+					</details>
+					`
+				}
+			`
 
-			const likeLink = li.querySelector('span a')
-			likeLink.addEventListener('click', (event) => {
-				event.preventDefault()
-				incrementLikes(likeLink, reply.guid)
-			})
+			li.innerHTML = template
+
+			if (reply.guid) {
+				const likeLink = li.querySelector('span a')
+				likeLink.addEventListener('click', (event) => {
+					event.preventDefault()
+					incrementLikes(likeLink, reply.guid)
+				})
+			}
 
 			if (reply.children && reply.children.length > 0) {
 				const detailsElement = li.querySelector('details')

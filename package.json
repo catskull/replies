@@ -16,7 +16,7 @@
 		"@biomejs/biome": "^1.9.1",
 		"@cloudflare/kv-asset-handler": "^0.3.4",
 		"lefthook": "^1.7.15",
-		"wrangler": "^3.76.0"
+		"wrangler": "^4.14.1"
 	},
 	"dependencies": {
 		"postal-mime": "^2.2.7",
