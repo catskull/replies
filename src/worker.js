@@ -34,7 +34,7 @@ export default {
 
 		let host = false
 		const subscribe = false
-		let parent = null
+		let parent = ''
 		let emailText = null
 
 		if (subjectUrl) {
