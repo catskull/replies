@@ -34,7 +34,7 @@ class Replies extends HTMLElement {
 		        <div class="comment-content">
 		          <p>${reply.message}</p>
 		          <small>
-			          <a title="Reply with an email!" href="mailto:${`reply@replies.catskull.net?subject=re:%20${reply.url}`}#${reply.guid}">Reply</a>
+			          <a title="Reply with an email!" href="mailto:${`${mailto}`}#${reply.guid}">Reply</a>
 			          -
 			          <span><a href="#" title="Click to like!">${reply.likes} Like${reply.likes === 1 ? '' : 's'}</a></span>
 			          -
