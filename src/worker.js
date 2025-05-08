@@ -30,29 +30,50 @@ export default {
 	},
 
 	async processReply(env, email) {
-		const url = new URL(email?.subject?.match(/\bhttps?:\/\/\S+/gi)?.[0])
+		const subjectUrl = email?.subject?.match(/\bhttps?:\/\/\S+/gi)?.[0]
 
-		if (!url) {
-			return { error: 'Unable to find valid URL in email subject' }
+		let host = false
+		const subscribe = false
+		let parent = undefined
+		let emailText = null
+
+		if (subjectUrl) {
+			const url = new URL(subjectUrl)
+			host = `${url.host}${url.pathname}` // catskull.net/path/to/document
+			// subscribe = url.searchParams.get('subscribe') ?? 0
+			parent = url.hash.substring(1)
+			emailText = email.text
+		} else if (email.inReplyTo) {
+			// B5D1E50C-E4D9-49A2-8FC3-DC4D1F65F8A2@catskull.net
+			const inReplyTo = email.inReplyTo.replace('<', '').replace('>', '').split('@')
+			// Example raw email body when replying. Split on a newline followed by > and a space. It's not rock solid but it should work.
+			//
+			// Test
+			//
+			// > On May 7, 2025, at 3:02 PM, catskull dave <bro@catskull.net> wrote:
+			// >
+			// > Test email
+			emailText = email.text.split('\n> ')[0].trim()
+			// catskull.net/newsletters/id
+			host = `${inReplyTo[1]}/newsletters/${inReplyTo[0]}`
+		}
+
+		if (!host) {
+			return { error: 'Unable to find valid host in email subject' }
 		}
 
 		const guid = crypto.randomUUID()
 		const gravitar_hash = await this.digestMessage(email.from.address.trim().toLowerCase())
-
-		const host = `${url.host}${url.pathname}` // catskull.net/path/to/document
-		const subscribe = url.searchParams.get('subscribe') ?? 0
-		const parent = url.hash.substring(1)
 
 		const query = `
     INSERT INTO Replies (guid, url, message, email, created_at, updated_at, gravitar_hash, subscribe, parent, name)
     VALUES (?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?,?)
     `
 
-		const emailText = xss(email.text, {
-			whiteList: {}, // empty, means filter out all tags
-			stripIgnoreTag: true, // filter out all HTML not in the whitelist
-			stripIgnoreTagBody: ['script'], // the script tag is a special case, we need
-			// to filter out its content
+		emailText = xss(emailText, {
+			whiteList: {},
+			stripIgnoreTag: true,
+			stripIgnoreTagBody: ['script'],
 		})
 
 		await env.db
