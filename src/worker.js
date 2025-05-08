@@ -34,7 +34,7 @@ export default {
 
 		let host = false
 		const subscribe = false
-		let parent = undefined
+		let parent = null
 		let emailText = null
 
 		if (subjectUrl) {
@@ -54,8 +54,8 @@ export default {
 			// >
 			// > Test email
 			emailText = email.text.split('\n> ')[0].trim()
-			// catskull.net/newsletters/id
-			host = `${inReplyTo[1]}/newsletters/${inReplyTo[0]}`
+			// catskull.net/newsletter/id
+			host = `${inReplyTo[1]}/newsletter/${inReplyTo[0]}`
 		}
 
 		if (!host) {
